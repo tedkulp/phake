@@ -17,8 +17,35 @@ function resolve_runfile($directory) {
     } while (true);
 }
 
-function load_runfile($file) {
-    require $file;
+function load_runfile($file, $include_phake_files = true, array $alternate_dirs = array()) {
+	$files = array($file);
+	if ($include_phake_files) {
+		$files = array_merge($files, find_phake_files(dirname($file)));
+		if (count($alternate_dirs)) {
+			foreach ($alternate_dirs as $one_dir) {
+				$files = array_merge($files, find_phake_files($one_dir));
+			}
+		}
+	}
+	foreach ($files as $file)
+		require $file;
+}
+
+function find_phake_files($dir) {
+	$result = array();
+	$extension = '.phake';
+
+	$dir_iterator = new \RecursiveDirectoryIterator($dir);
+	$iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
+
+	foreach ($iterator as $file) {
+		$filename = $file->getFilename();
+		if (strrpos($filename, $extension, 0) === strlen($filename) - strlen($extension)) { //ends with
+			$result[] = $file->getPathname();
+		}
+	}
+
+	return $result;
 }
 
 function fatal($exception, $message = null) {
