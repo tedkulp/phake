@@ -27,6 +27,7 @@ function load_runfile($file, $include_phake_files = true, array $alternate_dirs 
 			}
 		}
 	}
+	$files = array_unique($files);
 	foreach ($files as $file)
 		require $file;
 }
