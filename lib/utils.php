@@ -34,7 +34,7 @@ function load_runfile($file, $include_phake_files = true, array $alternate_dirs 
 
 function find_phake_files($dir) {
 	$result = array();
-	$extension = '.phake';
+	$extension = '.phake.php';
 
 	$dir_iterator = new \RecursiveDirectoryIterator($dir);
 	$iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
