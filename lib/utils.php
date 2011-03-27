@@ -17,7 +17,7 @@ function resolve_runfile($directory) {
     } while (true);
 }
 
-function load_runfile($file, $include_phake_files = true, array $alternate_dirs = array()) {
+function load_runfile($file, $include_phake_files = false, array $alternate_dirs = array()) {
 	$files = array($file);
 	if ($include_phake_files) {
 		$files = array_merge($files, find_phake_files(dirname($file)));
