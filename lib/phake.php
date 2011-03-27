@@ -7,12 +7,14 @@ class TaskCollisionException extends \Exception {};
 class Application implements \ArrayAccess, \IteratorAggregate
 {
     private $root;
-        private $args;
+    private $args;
+	public $cmd_args = null;
+	public $called_task = '';
     
-    public function __construct() {
-        $this->root = new Node(null, '');
-                $this->args = array();
-    }
+	public function __construct() {
+		$this->root = new Node(null, '');
+		$this->args = array();
+	}
     
     public function root() {
         return $this->root;
@@ -27,6 +29,7 @@ class Application implements \ArrayAccess, \IteratorAggregate
     }
     
     public function resolve($task_name, $relative_to = null) {
+		$this->called_task = $task_name;
         if ($task_name[0] != ':') {
             if ($relative_to) {
                 try {
@@ -56,13 +59,27 @@ class Application implements \ArrayAccess, \IteratorAggregate
     public function set_args(array $args) {
         $this->args = $args;
     }
+
+	public function set_cmd_args(array $args) {
+		$this->cmd_args = $args;
+	}
+
+	public function clear_cmd_args() {
+		$this->cmd_args = null;
+	}
     
     public function offsetExists($k) {
-        return array_key_exists($k, $this->args);
+		$ary = $this->args;
+		if (is_array($this->cmd_args))
+			$ary = array_merge($ary, $this->cmd_args);
+        return array_key_exists($k, $ary);
     }
     
     public function offsetGet($k) {
-        return $this->args[$k];
+		$ary = $this->args;
+		if (is_array($this->cmd_args))
+			$ary = array_merge($ary, $this->cmd_args);
+        return $ary[$k];
     }
     
     public function offsetSet($k, $v) {
@@ -151,7 +168,11 @@ class Node
     public function invoke($application) {
         foreach ($this->dependencies() as $d) $application->invoke($d, $this->get_parent());
         foreach ($this->before as $t) $t->invoke($application);
-        foreach ($this->tasks as $t) $t->invoke($application);
+		foreach ($this->tasks as $t) {
+			$t->set_name($this->name, $application->called_task);
+			$t->invoke($application);
+			$t->clear_name();
+		}
         foreach ($this->after as $t) $t->invoke($application);
     }
     
@@ -171,12 +192,27 @@ class Task
     private $lambda;
     private $deps;
     private $desc       = null;
+	private $options	= null;
+	private $usage		= null;
     private $has_run    = false;
+	private $task_name	= null;
+	private $called_task = null;
     
     public function __construct($lambda = null, $deps = array()) {
         $this->lambda = $lambda;
         $this->deps = $deps;
+		$this->options = array('', array());
     }
+
+	public function set_name($name, $called_task) {
+		$this->task_name = $name;
+		$this->called_task = $called_task;
+	}
+
+	public function clear_name() {
+		$this->task_name = null;
+		$this->called_task = null;
+	}
     
     public function get_description() {
         return $this->desc;
@@ -184,6 +220,22 @@ class Task
     
     public function set_description($d) {
         $this->desc = $d;
+    }
+
+    public function get_usage() {
+        return $this->usage;
+    }
+
+    public function set_usage($d) {
+        $this->usage = $d;
+    }
+
+    public function get_options() {
+        return $this->options;
+    }
+    
+    public function set_options($d) {
+        $this->options = $d;
     }
     
     public function dependencies() {
@@ -197,11 +249,50 @@ class Task
     public function invoke($application) {
         if (!$this->has_run) {
             if ($this->lambda) {
+				if ($this->options != null)
+				{
+					$args = $GLOBALS['argv'];
+					array_shift($args);
+					$opts = $this->parse_options($args);
+					if (array_key_exists('help', $opts)) {
+						echo "\nTask: " . $this->called_task . "\n";
+						echo $this->usage . "\n\n";
+						exit();
+					}
+					else {
+						$application->set_cmd_args($opts);
+					}
+				}
                 $lambda = $this->lambda;
                 $lambda($application);
+				$application->clear_cmd_args();
             }
             $this->has_run = true;
         }
     }
+
+	public function parse_options($args) {
+		if (in_array($this->called_task, $args))
+			unset($args[array_search($this->called_task, $args)]);
+
+		$options = \Console_Getopt::getopt2($args, 'T'.$this->options[0], array_merge($this->options[1], array('tasks', 'help')), true);
+		$args = array();
+
+		foreach ($options[0] as $option) {
+			$name = ltrim($option[0], '-');
+			$value = $option[1];
+			if ($value === null)
+				$value = true;
+			$args[$name] = $value;
+		}
+
+		foreach ($options[1] as $option) {
+			$name = ltrim($option[0], '-');
+			if (array_key_exists($name, $args))
+				$args[$name] = true;
+		}
+
+		return $args;
+	}
 }
 ?>

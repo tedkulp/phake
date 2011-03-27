@@ -31,4 +31,12 @@ function after($task, $lambda) {
 function desc($description) {
     builder()->desc($description);
 }
+
+function options($short_opt = '', $long_opt = array()) {
+	builder()->options(array($short_opt, $long_opt));
+}
+
+function usage($usage_text) {
+	builder()->usage($usage_text);
+}
 ?>

@@ -1,10 +1,10 @@
 <?php
 namespace phake;
 
+require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/getopt.php';
 require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/phake.php';
 require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/utils.php';
 require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/global_helpers.php';
-require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/option_parser.php';
 require dirname(__FILE__) . DIRECTORY_SEPARATOR . '/builder.php';
 
 class Runner
@@ -18,39 +18,38 @@ class Runner
 			// Defaults
 			$action     = 'invoke';
 			$task_names = array('default');
-			$trace      = false;
 
 			$args = $GLOBALS['argv'];
 			array_shift($args);
 
 			//Show the task list if no task is given
 			if (empty($args))
-				$args = array('-T');
+			{
+				$action = 'list';
+			}
 
-			$parser = new OptionParser($args);
-			foreach ($parser->get_options() as $option => $value) {
-				switch ($option) {
-				case 't':
-				case 'trace':
-					$trace = true;
-					break;
+			$options = \Console_Getopt::getopt2($args, 'T', array('tasks'), true);
+
+			foreach ($options[0] as $one_option) {
+				switch ($one_option[0]) {
 				case 'T':
-				case 'tasks':
+				case '--tasks':
 					$action = 'list';
 					break;
-				default:
-					throw new Exception("Unknown command line option '$option'");
 				}
 			}
 
 			$cli_args = array();
 			$cli_task_names = array();
-			foreach ($parser->get_non_options() as $option) {
-				if (strpos($option, '=') > 0) {
-					list($k, $v) = explode('=', $option);
-					$cli_args[$k] = $v;
-				} else {
-					$cli_task_names[] = $option;
+			foreach ($options[1] as $option) {
+				if (ltrim($option, '-') == $option) {
+					if (strpos($option, '=') > 0) {
+						list($k, $v) = explode('=', $option);
+						$cli_args[$k] = $v;
+					} else {
+						if (!count($cli_task_names))
+							$cli_task_names[] = $option;
+					}
 				}
 			}
 
@@ -67,7 +66,7 @@ class Runner
 			$directory = dirname($runfile);
 
 			if (!@chdir($directory)) {
-				throw new Exception("Couldn't change to directory '$directory'");
+				throw new \Exception("Couldn't change to directory '$directory'");
 			} else {
 				echo "(in $directory)\n";
 			}
@@ -100,7 +99,7 @@ class Runner
 
 		} catch (TaskNotFoundException $tnfe) {
 			fatal($tnfe, "Don't know how to build task '$task_name'\n");
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			fatal($e);
 		}
 	}
