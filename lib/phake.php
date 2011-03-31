@@ -252,7 +252,6 @@ class Task
 				if ($this->options != null)
 				{
 					$args = $GLOBALS['argv'];
-					array_shift($args);
 					$opts = $this->parse_options($args);
 					if (array_key_exists('help', $opts)) {
 						echo "\nTask: " . $this->called_task . "\n";
@@ -275,7 +274,7 @@ class Task
 		if (in_array($this->called_task, $args))
 			unset($args[array_search($this->called_task, $args)]);
 
-		$options = \Console_Getopt::getopt2($args, 'T'.$this->options[0], array_merge($this->options[1], array('tasks', 'help')), true);
+		$options = \Console_Getopt::getopt($args, 'T'.$this->options[0], array_merge($this->options[1], array('tasks', 'help')), true);
 		$args = array();
 
 		foreach ($options[0] as $option) {
@@ -286,10 +285,16 @@ class Task
 			$args[$name] = $value;
 		}
 
+		$count = 0;
 		foreach ($options[1] as $option) {
-			$name = ltrim($option[0], '-');
-			if (array_key_exists($name, $args))
-				$args[$name] = true;
+			if (ltrim($option, '-') == $option) {
+				$args['arg' . $count] = $option;
+				$count++;
+			} else {
+				$value = ltrim($option, '-');
+				if (array_key_exists($name, $args))
+					$args[$name] = true;
+			}
 		}
 
 		return $args;
