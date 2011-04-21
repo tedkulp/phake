@@ -28,7 +28,7 @@ class Runner
 				$action = 'list';
 			}
 
-			$options = \Console_Getopt::getopt2($args, 'T', array('tasks'), true);
+			$options = Console_Getopt::getopt2($args, 'T', array('tasks'), true);
 
 			foreach ($options[0] as $one_option) {
 				switch ($one_option[0]) {

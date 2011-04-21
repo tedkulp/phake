@@ -21,6 +21,8 @@
  * @link     http://pear.php.net/package/Console_Getopt
  */
 
+namespace phake;
+
 require_once 'PEAR.php';
 
 /**
@@ -106,7 +108,7 @@ class Console_Getopt
     function doGetopt($version, $args, $short_options, $long_options = null, $skip_unknown = false)
     {
         // in case you pass directly readPHPArgv() as the first arg
-        if (PEAR::isError($args)) {
+        if (\PEAR::isError($args)) {
             return $args;
         }
 
@@ -151,7 +153,7 @@ class Console_Getopt
                                                           $opts,
                                                           $args,
                                                           $skip_unknown);
-                if (PEAR::isError($error)) {
+                if (\PEAR::isError($error)) {
                     return $error;
                 }
             } elseif ($arg == '-') {
@@ -164,7 +166,7 @@ class Console_Getopt
                                                            $opts,
                                                            $args,
                                                            $skip_unknown);
-                if (PEAR::isError($error)) {
+                if (\PEAR::isError($error)) {
                     return $error;
                 }
             }
@@ -198,7 +200,7 @@ class Console_Getopt
                 }
 
                 $msg = "Console_Getopt: unrecognized option -- $opt";
-                return PEAR::raiseError($msg);
+                return \PEAR::raiseError($msg);
             }
 
             if (strlen($spec) > 1 && $spec{1} == ':') {
@@ -220,11 +222,11 @@ class Console_Getopt
                         if (Console_Getopt::_isShortOpt($opt_arg)
                             || Console_Getopt::_isLongOpt($opt_arg)) {
                             $msg = "option requires an argument --$opt";
-                            return PEAR::raiseError("Console_Getopt:" . $msg);
+                            return \PEAR::raiseError("Console_Getopt:" . $msg);
                         }
                     } else {
                         $msg = "option requires an argument --$opt";
-                        return PEAR::raiseError("Console_Getopt:" . $msg);
+                        return \PEAR::raiseError("Console_Getopt:" . $msg);
                     }
                 }
             }
@@ -306,7 +308,7 @@ class Console_Getopt
                 $next_option_rest{0} != '=') {
 
                 $msg = "Console_Getopt: option --$opt is ambiguous";
-                return PEAR::raiseError($msg);
+                return \PEAR::raiseError($msg);
             }
 
             if (substr($long_opt, -1) == '=') {
@@ -315,18 +317,18 @@ class Console_Getopt
                        Take the next argument if one wasn't specified. */;
                     if (!strlen($opt_arg) && !(list(, $opt_arg) = each($args))) {
                         $msg = "Console_Getopt: option requires an argument --$opt";
-                        return PEAR::raiseError($msg);
+                        return \PEAR::raiseError($msg);
                     }
 
                     if (Console_Getopt::_isShortOpt($opt_arg)
                         || Console_Getopt::_isLongOpt($opt_arg)) {
                         $msg = "Console_Getopt: option requires an argument --$opt";
-                        return PEAR::raiseError($msg);
+                        return \PEAR::raiseError($msg);
                     }
                 }
             } else if ($opt_arg) {
                 $msg = "Console_Getopt: option --$opt doesn't allow an argument";
-                return PEAR::raiseError($msg);
+                return \PEAR::raiseError($msg);
             }
 
             $opts[] = array('--' . $opt, $opt_arg);
@@ -337,7 +339,7 @@ class Console_Getopt
             return;
         }
 
-        return PEAR::raiseError("Console_Getopt: unrecognized option --$opt");
+        return \PEAR::raiseError("Console_Getopt: unrecognized option --$opt");
     }
 
     /**
@@ -354,7 +356,7 @@ class Console_Getopt
             if (!@is_array($_SERVER['argv'])) {
                 if (!@is_array($GLOBALS['HTTP_SERVER_VARS']['argv'])) {
                     $msg = "Could not read cmd args (register_argc_argv=Off?)";
-                    return PEAR::raiseError("Console_Getopt: " . $msg);
+                    return \PEAR::raiseError("Console_Getopt: " . $msg);
                 }
                 return $GLOBALS['HTTP_SERVER_VARS']['argv'];
             }

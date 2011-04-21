@@ -274,7 +274,7 @@ class Task
 		if (in_array($this->called_task, $args))
 			unset($args[array_search($this->called_task, $args)]);
 
-		$options = \Console_Getopt::getopt($args, 'T'.$this->options[0], array_merge($this->options[1], array('tasks', 'help')), true);
+		$options = Console_Getopt::getopt($args, 'T'.$this->options[0], array_merge($this->options[1], array('tasks', 'help')), true);
 		$args = array();
 
 		foreach ($options[0] as $option) {
