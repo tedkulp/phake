@@ -63,7 +63,10 @@ class Runner
 			if (empty($runfile) || !is_file($runfile))
 				$runfile = resolve_runfile(getcwd());
 
-			$directory = dirname($runfile);
+			if (!empty($runfile))
+				$directory = dirname($runfile);
+			else if (isset($_SERVER['PWD']))
+				$directory = $_SERVER['PWD'];
 
 			if (!@chdir($directory)) {
 				throw new \Exception("Couldn't change to directory '$directory'");

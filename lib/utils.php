@@ -2,6 +2,7 @@
 namespace phake;
 
 function resolve_runfile($directory) {
+	$count = 0;
     $runfiles = array('Phakefile', 'Phakefile.php');
     do {
         foreach ($runfiles as $r) {
@@ -11,10 +12,11 @@ function resolve_runfile($directory) {
             }
         }
         if ($directory == '/') {
-            throw new \Exception("No Phakefile found");
+			return '';
         }
         $directory = dirname($directory);
-    } while (true);
+		$count++;
+    } while ($count < 30);
 }
 
 function load_runfile($file, $include_phake_files = false, array $alternate_dirs = array()) {
@@ -29,21 +31,34 @@ function load_runfile($file, $include_phake_files = false, array $alternate_dirs
 	}
 	$files = array_unique($files);
 	foreach ($files as $file)
-		require $file;
+	{
+		if (!empty($file))
+			require $file;
+	}
 }
 
 function find_phake_files($dir) {
 	$result = array();
 	$extension = '.phake.php';
 
-	$dir_iterator = new \RecursiveDirectoryIterator($dir);
-	$iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
+	if (empty($dir) || !@is_dir($dir) || !@is_readable($dir))
+		return $result;
 
-	foreach ($iterator as $file) {
-		$filename = $file->getFilename();
-		if (strrpos($filename, $extension, 0) === strlen($filename) - strlen($extension)) { //ends with
-			$result[] = $file->getPathname();
+	try
+	{
+		$dir_iterator = new \RecursiveDirectoryIterator($dir);
+		$iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST, \RecursiveIteratorIterator::CATCH_GET_CHILD);
+
+		foreach ($iterator as $file)
+		{
+			$filename = $file->getFilename();
+			if (strrpos($filename, $extension, 0) === strlen($filename) - strlen($extension)) { //ends with
+				$result[] = $file->getPathname();
+			}
 		}
+	}
+	catch (Exception $e)
+	{
 	}
 
 	return $result;
